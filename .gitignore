@@ -1,0 +1,26 @@
+# 가상환경
+.venv/
+
+# 환경 설정 (API key 없음이라도 로컬 경로 포함 가능성)
+.env
+
+# Chroma vector DB (대용량 바이너리 – 인덱싱으로 재생성 가능)
+data/chroma/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# macOS
+.DS_Store
+
+# 로그
+*.log
+nohup.out
+
+# IDE
+.vscode/
+.idea/
