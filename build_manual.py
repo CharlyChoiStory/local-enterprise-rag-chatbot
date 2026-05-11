@@ -606,14 +606,118 @@ heading2("AI 협업 생태계 구성도", "🤖")
 make_table(
     ["도구", "역할", "활용 방식"],
     [
-        ("🦅  OpenClaw 에이전트", "전체 진행 컨설팅 및 외부 원격 지시",
-         "텔레그램으로 외부에서 단계별 지시\n기획·아키텍처·테스트 전략 수립"),
-        ("💻  VSCode", "코드 편집기·개발 환경",
-         "파일 편집, 터미널 실행,\n프로젝트 구조 관리"),
-        ("🤖  Codex / Claude Code", "실제 코드 자동 생성",
-         "자연어 지시 → 코드 자동 작성\n디버깅·리팩토링 지원"),
-        ("🌐  Vercel", "데모 배포 및 URL 공유",
-         "GitHub 연동 → 자동 빌드\n데모용 공개 URL 제공"),
+        ("📱  텔레그램 (Telegram)", "외부 원격 지시 채널",
+         "개발자가 어디서든 텔레그램으로\nOpenClaw에 개발 지시 전달"),
+        ("🦅  OpenClaw 에이전트", "전체 진행 컨설팅 및 원격 지시 해석",
+         "텔레그램 지시 수신 → 분석 → 단계별 실행 계획\n기획·아키텍처·테스트 전략 수립"),
+        ("💻  VSCode + Claude Code", "로컬 PC 코드 자동 생성 및 실행",
+         "자연어 지시 → 코드 자동 작성\n디버깅·리팩토링·테스트 지원"),
+        ("🐙  GitHub", "소스코드 버전 관리 및 공유",
+         "Git 이력 관리 + 오픈소스 공개\n팀 협업 및 코드 백업"),
+    ],
+    header_bg=BLUE_DARK, alt_bg=BLUE_LIGHT,
+)
+
+# ── 텔레그램 → OpenClaw → 로컬 시스템 흐름 도식 ──────────────
+heading2("외부 원격 지시 흐름 도식: Telegram → OpenClaw → 로컬 시스템", "📡")
+body("보안 원칙상 외부에서 로컬 시스템에 직접 접근하지 않고, "
+     "텔레그램 → OpenClaw 에이전트 → Claude Code(로컬) 경로로만 개발 지시가 전달되었습니다.",
+     size=10.5)
+
+# 도식 (표로 구현)
+def _remote_flow_diagram():
+    rows_data = [
+        # (배경색, 아이콘, 제목, 설명)
+        (RGBColor(0x1E, 0x3A, 0x5F), "📱", "외부 환경 (개발자·관리자)",
+         "외부 어디서든 스마트폰·PC로 접속 가능"),
+        None,  # 화살표 행
+        (RGBColor(0x17, 0x52, 0x8A), "🦅", "텔레그램 → OpenClaw 에이전트",
+         "\"2단계: 파서 구현해줘. PDF·TXT·DOCX·PPTX 지원\" 등 자연어 지시"),
+        None,
+        (RGBColor(0x1F, 0x6E, 0x43), "🤖", "Claude Code  (VSCode + 로컬 PC)",
+         "자연어 지시를 코드로 변환 · 자동 실행 · 오류 수정"),
+        None,
+        (RGBColor(0x40, 0x40, 0x70), "🏠", "로컬 RAG 챗봇 시스템",
+         "Streamlit UI + Ollama LLM + Chroma DB  ← 모두 로컬(인터넷 없음)"),
+        None,
+        (RGBColor(0x17, 0x52, 0x8A), "🦅", "OpenClaw 에이전트 → 텔레그램 보고",
+         "\"파서 완료. 30/30 성공. 다음 단계 진행하시겠습니까?\""),
+        None,
+        (RGBColor(0x1E, 0x3A, 0x5F), "📱", "외부 환경 (개발자·관리자)",
+         "결과 확인 후 다음 단계 지시"),
+    ]
+
+    for row in rows_data:
+        if row is None:
+            # 화살표 행
+            p_arr = doc.add_paragraph()
+            p_arr.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            r_arr = p_arr.add_run("▼")
+            r_arr.font.size = Pt(14)
+            r_arr.font.color.rgb = BLUE_MID
+            p_arr.paragraph_format.space_before = Pt(0)
+            p_arr.paragraph_format.space_after  = Pt(0)
+        else:
+            bg_color, icon, title, desc = row
+            tbl = doc.add_table(rows=1, cols=2)
+            tbl.alignment = WD_TABLE_ALIGNMENT.LEFT
+            set_table_border(tbl, size=6, color="1164A3")
+
+            # 아이콘 셀
+            ic = tbl.rows[0].cells[0]
+            set_cell_bg(ic, bg_color)
+            ic.width = Cm(1.4)
+            ip = ic.paragraphs[0]
+            ip.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            ir = ip.add_run(icon)
+            ir.font.size = Pt(18)
+
+            # 내용 셀
+            cc = tbl.rows[0].cells[1]
+            set_cell_bg(cc, RGBColor(
+                min(bg_color[0] + 80, 255),
+                min(bg_color[1] + 80, 255),
+                min(bg_color[2] + 80, 255),
+            ))
+            tp = cc.paragraphs[0]
+            tr = tp.add_run(title)
+            tr.font.bold = True
+            tr.font.size = Pt(10.5)
+            tr.font.color.rgb = WHITE
+            dp = cc.add_paragraph(desc)
+            dr = dp.runs[0] if dp.runs else dp.add_run(desc)
+            dr.font.size = Pt(9)
+            dr.font.color.rgb = RGBColor(0xDD, 0xDD, 0xDD)
+
+            doc.add_paragraph().paragraph_format.space_after = Pt(0)
+
+_remote_flow_diagram()
+doc.add_paragraph().paragraph_format.space_after = Pt(6)
+
+info_box([
+    "🔐  보안 포인트",
+    "",
+    "  • 텔레그램은 지시 전달 채널일 뿐 — 회사 문서나 RAG 처리 결과는 텔레그램을 통해",
+    "    오가지 않습니다.",
+    "  • 로컬 RAG 시스템은 항상 내부망에서만 동작하며,",
+    "    외부에서 직접 접근하는 포트나 URL은 존재하지 않습니다.",
+    "  • OpenClaw 에이전트가 전달하는 것은 '개발 지시(텍스트)'뿐입니다.",
+], bg=GREEN_LIGHT, border_color="1F6E43")
+
+heading2("OpenClaw 원격 지시 — 단계별 예시", "📋")
+make_table(
+    ["단계", "위치", "실제 내용"],
+    [
+        ("1. 지시 전달", "외부 → 텔레그램 → OpenClaw",
+         "\"2단계: 파서 구현. PDF·TXT·DOCX·PPTX 지원, 카테고리 자동 감지\""),
+        ("2. 계획 수립", "OpenClaw 에이전트",
+         "요구사항 정리 → 파일 구조 설계 → Claude Code에 구현 지시"),
+        ("3. 코드 생성", "Claude Code (로컬 PC)",
+         "src/parsers.py 자동 생성 → 30개 파일 테스트 실행"),
+        ("4. 결과 보고", "Claude Code → OpenClaw → 텔레그램",
+         "\"파서 완료. 30/30 성공. 오류 0건. 3단계 진행 가능\""),
+        ("5. 다음 지시", "외부 → 텔레그램 → OpenClaw",
+         "\"3단계 진행. 청킹 1600자·겹침 250자 기준으로\""),
     ],
     header_bg=BLUE_DARK, alt_bg=BLUE_LIGHT,
 )
@@ -625,30 +729,18 @@ info_box([
     "",
     "바이브코딩 방식:",
     "  사람이 \"무엇을 만들지\" 말로 설명하면",
-    "  AI(Codex·Claude Code)가 코드를 대신 작성",
+    "  AI(Claude Code)가 코드를 대신 작성",
     "",
-    "  👨‍💼 사람 (감독자·기획자)",
+    "  👨‍💼 사람 (감독자·기획자, 텔레그램으로 지시)",
     "      \"파서를 구현해줘. PDF·TXT·DOCX·PPTX 지원하고...\"",
-    "         ↓ 지시",
-    "  🤖 AI (Codex / Claude Code)",
+    "         ↓  OpenClaw 에이전트가 해석·전달",
+    "  🤖 Claude Code (로컬 PC에서 실행)",
     "      → src/parsers.py 자동 생성",
     "      → 30개 파일 테스트 코드 실행",
-    "      → 버그 자동 수정",
+    "      → 버그 자동 수정 후 보고",
     "",
     "마치 건축가가 설계도를 그리면 시공팀이 건물을 짓는 것과 같습니다.",
 ], bg=BLUE_LIGHT)
-
-heading2("OpenClaw 원격 지시 흐름", "📱")
-make_table(
-    ["단계", "위치", "내용"],
-    [
-        ("1. 지시", "외부 (텔레그램)", "\"2단계: 파서 구현해줘. PDF·TXT·DOCX·PPTX 지원\""),
-        ("2. 분석", "OpenClaw 에이전트", "요구사항 정리 → 코드 설계 → 구현 계획 수립"),
-        ("3. 실행", "Claude Code (로컬 PC)", "src/parsers.py 자동 생성 및 테스트 실행"),
-        ("4. 보고", "외부 (텔레그램)", "\"파서 완료. 30/30개 성공. 다음 단계 진행?\""),
-    ],
-    header_bg=BLUE_DARK, alt_bg=BLUE_LIGHT,
-)
 doc.add_page_break()
 
 
@@ -669,7 +761,7 @@ make_table(
         ("4단계: 임베딩+DB", "bge-m3 임베딩·Chroma 저장", "67개 벡터 DB 저장 완료"),
         ("5단계: RAG 파이프라인", "LLM 연결·답변 생성 구현", "샘플 질문 답변 확인"),
         ("6단계: Slack UI", "Streamlit Slack 스타일 UI", "인덱싱·채팅·출처 표시 동작"),
-        ("7단계: 배포", "GitHub 푸시·Vercel 데모", "공개 URL 접근 가능"),
+        ("7단계: GitHub 배포", "소스코드 GitHub 공개 및 버전 관리", "GitHub 리포지토리 접근 가능"),
     ],
     header_bg=BLUE_DARK, alt_bg=BLUE_LIGHT,
 )
@@ -783,15 +875,30 @@ make_table(
 )
 
 heading2("7단계: GitHub 배포", "🚀")
+body(
+    "보안 원칙상 Streamlit + Ollama 기반 로컬 시스템은 외부 서버리스 플랫폼(Vercel 등)에 "
+    "배포할 수 없습니다. 소스코드만 GitHub에 공개하여 버전 관리 및 재현성을 확보했습니다.",
+    size=10.5,
+)
+info_box([
+    "⚠️  Vercel·클라우드 배포가 불가능한 이유",
+    "",
+    "  1. Streamlit 앱은 지속적인 WebSocket 서버가 필요  →  Vercel 서버리스 구조 불가",
+    "  2. Ollama 바이너리(5GB)를 서버리스 함수(50MB 제한)에 올릴 수 없음",
+    "  3. Chroma Vector DB는 영구 파일시스템 필요  →  Vercel /tmp(512MB, 휘발성) 불가",
+    "  4. 기업 내부 문서를 외부 클라우드에 올리는 것 자체가 보안 위반",
+    "",
+    "✅  해결 방법: GitHub에 소스코드 공개 → 사내 서버/개발자 PC에서 직접 실행",
+], bg=ORANGE_LIGHT, border_color="C55A11")
 make_table(
     ["단계", "명령어 / 내용"],
     [
         ("① .gitignore 설정", "보안 파일(.env)·가상환경(.venv)·Vector DB(data/chroma/) 제외"),
         ("② git init", "로컬 저장소 초기화"),
         ("③ git add & commit", "전체 소스코드 스테이징 및 커밋"),
-        ("④ GitHub 리포지토리 생성", "gh repo create local-enterprise-rag-chatbot"),
+        ("④ GitHub 리포지토리 생성", "gh repo create local-enterprise-rag-chatbot --public"),
         ("⑤ git push", "GitHub에 소스코드 업로드"),
-        ("⑥ Vercel 연동", "GitHub 리포지토리 → Vercel 자동 빌드 → 데모 URL 생성"),
+        ("⑥ 실행 방법 공유", "README.md의 설치·실행 가이드를 팀원에게 전달"),
     ],
     header_bg=BLUE_DARK, alt_bg=BLUE_LIGHT,
 )
@@ -977,8 +1084,8 @@ doc.add_paragraph()
 p_footer = doc.add_paragraph()
 p_footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
 r_f = p_footer.add_run(
-    "이 매뉴얼은 AI 도구(OpenClaw 에이전트 + Claude Code)를 활용한 바이브코딩으로 제작되었습니다.\n"
-    "개발 환경: VSCode + Codex/Claude Code  |  데모 배포: GitHub + Vercel"
+    "이 매뉴얼은 AI 도구(텔레그램 → OpenClaw 에이전트 + Claude Code)를 활용한 바이브코딩으로 제작되었습니다.\n"
+    "개발 환경: VSCode + Claude Code  |  원격 지시: 텔레그램 → OpenClaw  |  코드 공유: GitHub"
 )
 r_f.font.size  = Pt(9)
 r_f.font.color.rgb = RGBColor(0x80, 0x80, 0x80)
